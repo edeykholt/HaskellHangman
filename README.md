@@ -12,6 +12,7 @@ The environment contains a guided Hangman project, designed as a companion to th
 4. Wait for the environment to build. This can take a while the first time.
 5. Select "VS Code Browser" as your editor.
 
+[Link to Eykholt's] (https://edeykholt-haskellhangma-luvb8zdzf17.ws-us82.gitpod.io/)
 ## Build Your Project
 
 As you attend the live sessions, complete each of the assignments in the `/assignments` directory, making changes to the associated `.hs` files in the `/solutions` directory.
