@@ -3,7 +3,8 @@ module A6 where
 import Provided
 
 import Data.List ( intersperse, sort )
-import Data.Char (isAlpha, isLetter)
+import Data.Char (isAlpha, isLetter, toUpper)
+-- import Text.Pandoc.Shared (capitalize)
 
 -- *** A6-0: WARM-UP *** --
 
@@ -73,15 +74,32 @@ setSecret = do
 -- *** A6-1: Records & Instances *** --
 
 -- Q#08
-data Game
+data Game = Game {
+    game_secretWord       :: String
+  , game_currentGuess     :: String
+  , game_usedMoves        :: String
+  , game_remainingChances :: Int
+  }
+  deriving (Show)  
+-- *A6> Game "balbasar" "_a___a_a__" "aq" 8
+-- Game {game_secretWord = "balbasar", game_currentGuess = "_a___a_a__", game_usedMoves = "aq", game_remainingChances = 8}
 
 -- Q#09
-
-repeatedMove = undefined
+repeatedMove :: Move -> Game -> Bool
+repeatedMove m g = elem m (game_usedMoves g)
+-- *A6> repeatedMove 'a' (Game "balbasar" "_a___a_a__" "aq" 8)
+-- True
+-- *A6> repeatedMove 'a' $ Game "balbasar" "_a___a_a__" "aq" 8
+-- True
+-- *A6> repeatedMove 'q' $ Game "balbasar" "_a___a_a__" "aq" 8
+-- True
+-- *A6> repeatedMove 'x' $ Game "balbasar" "_a___a_a__" "aq" 8
+-- False
 
 -- Q#10
-
+makeGame :: Secret -> Game
 makeGame = undefined
+-- makeGame s = Game (identity s) (map (\_ -> '_') s ) "" 10
 
 -- Q#11
 
