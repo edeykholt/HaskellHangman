@@ -171,12 +171,21 @@ instance Show GameException where
 -- *** A6-2: Exception Contexts *** --
 
 -- Q#14
-
-toMaybe = undefined
+toMaybe :: Bool -> a -> Maybe a
+toMaybe b aa = if b then Just aa else Nothing
+-- *A6> toMaybe True "hello"
+-- Just "hello"
+-- *A6> toMaybe False "hello"
+-- Nothing
 
 -- Q#15
-
-validateSecret = undefined
+validateSecret :: (Secret -> Bool) -> Secret -> Either GameException Secret
+validateSecret p s = 
+  if p s then Right s else Left InvalidWord
+-- *A6> validateSecret lengthInRange "balbasar"
+-- Right "balbasar"
+-- *A6> validateSecret lengthInRange "a"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 
 -- Q#16
 
