@@ -157,7 +157,16 @@ instance Show Game where
 -- **************************************************
 
 -- Q#13
+instance Show GameException where
+  show ge = case ge of
+    InvalidMove -> "Invalid move. Must use an alphabetic character."
+    InvalidWord -> "Invalid word. A secret word must be between " ++ show (fst _LENGTH_) ++ " and " ++ show (snd _LENGTH_) ++ " alphabetic characters."
+    RepeatMove -> "Repeated move. The character was previously used. Try another."
+    GameOver -> "Game over, Man!"
+    _ -> "unexpected exception"
 
+-- *A6> show InvalidWord
+-- "Invalid word. A secret word must be between 3 and 20 alphabetic characters."
 
 -- *** A6-2: Exception Contexts *** --
 
