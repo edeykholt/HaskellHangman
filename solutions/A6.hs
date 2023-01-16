@@ -44,7 +44,7 @@ invalidMove move = not $ isLetter move
 
 -- Q#05
 revealLetters :: Move -> Secret -> Guess -> Guess
-revealLetters m s g = zipWith (\sn gn -> if m == sn then m else gn) s g
+revealLetters m s g = zipWith (\sChar gChar -> if m == sChar then m else gChar) s g
 -- *A6> revealLetters 'a' "balbasar" "________"
 -- "_a__a_a_"
 -- *A6> revealLetters 'b' "balbasar" "_a__a_a_"
@@ -75,12 +75,12 @@ setSecret = do
 
 -- Q#08
 data Game = Game {
-    game_secretWord       :: String
-  , game_currentGuess     :: String
-  , game_usedMoves        :: String
+    game_secretWord       :: Secret
+  , game_currentGuess     :: Guess
+  , game_usedMoves        :: [Move]
   , game_remainingChances :: Int
   }
-  deriving (Show)  
+  -- deriving (Show)  
 -- *A6> Game "balbasar" "_a___a_a__" "aq" 8
 -- Game {game_secretWord = "balbasar", game_currentGuess = "_a___a_a__", game_usedMoves = "aq", game_remainingChances = 8}
 
@@ -98,24 +98,63 @@ repeatedMove m g = elem m (game_usedMoves g)
 
 -- Q#10
 makeGame :: Secret -> Game
-makeGame = undefined
--- makeGame s = Game (identity s) (map (\_ -> '_') s ) "" 10
+makeGame s = Game (map (\ss -> toUpper ss) s) (map (const '_') s ) "" _CHANCES_
+-- *A6> makeGame "BalbasaR" 
+-- Game {game_secretWord = "BALBASAR", game_currentGuess = "________", game_usedMoves = "", game_remainingChances = 7}
 
 -- Q#11
-
-updateGame = undefined
+updateGame :: Move -> Game -> Game
+updateGame m g = Game (game_secretWord g) newGuess newUsedMoves newChances
+  where
+    mUpper :: Move
+    mUpper = toUpper m
+    newGuess = revealLetters mUpper (game_secretWord g) (game_currentGuess g) 
+    newUsedMoves = if repeatedMove mUpper g then game_usedMoves g else mUpper : game_usedMoves g
+    newChances = if isGoodGuess then game_remainingChances g else updateChances m (game_secretWord g) (game_remainingChances g) 
+    isGoodGuess = mUpper `elem` game_secretWord g
+-- *A6> updateGame 'b' (makeGame "balbasar")j
+-- Game {game_secretWord = "BALBASAR", game_currentGuess = "B__B____", game_usedMoves = "B", game_remainingChances = 7}
+-- *A6> updateGame 'x' (makeGame "balbasar")
+-- Game {game_secretWord = "BALBASAR", game_currentGuess = "________", game_usedMoves = "X", game_remainingChances = 6}
 
 -- Q#12
 
-showGameHelper :: String -> [Char] -> Int -> String
-showGameHelper game moves chances = unlines [
-      _STARS_
-    , "\tSecret Word:\t" ++ intersperse ' ' game ++ "\n"
-    , "\tGuessed:\t" ++ intersperse ' ' (sort moves) ++ "\n"
-    , "\tChances:\t" ++ show chances
-    , _STARS_
-    ]
+-- showGameHelper :: String -> [Char] -> Int -> String
+-- showGameHelper game moves chances = unlines [
+--      _STARS_
+--    , "\tSecret Word:\t" ++ intersperse ' ' game ++ "\n"
+--    , "\tGuessed:\t" ++ intersperse ' ' (sort moves) ++ "\n"
+--    , "\tChances:\t" ++ show chances
+--    , _STARS_
+--    ]
 
+
+
+showGameHelper :: Game -> String
+showGameHelper game = unlines [
+  _STARS_
+  , "\tCurrent Guess:\t" ++ intersperse ' ' (game_currentGuess game) ++ "\n"
+  , "\tGuessed:\t" ++ intersperse ' ' (sort (game_usedMoves game)) ++ "\n"
+  , "\tRemaining Chances:\t" ++ show (game_remainingChances game)
+  , _STARS_ 
+  ]
+-- *A6> show $ showGameHelper2 $ makeGame "balbasar"
+-- "\"\\n**************************************************\\n\\n\\tCurrent Guess:\\t_ _ _ _ _ _ _ _\\n\\n\\tGuessed:\\t\\n\\n\\tRemaining Chances:\\t7\\n\\n**************************************************\\n\\n\""
+
+instance Show Game where
+  show game = showGameHelper game
+
+-- *A6> putStrLn $ show $ makeGame "balbasar"
+-- 
+-- **************************************************
+-- 
+--        Current Guess:  _ _ _ _ _ _ _ _
+--
+--        Guessed:
+--
+--        Remaining Chances:      7
+-- 
+-- **************************************************
 
 -- Q#13
 
