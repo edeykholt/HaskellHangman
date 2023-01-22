@@ -53,7 +53,7 @@ revealLetters m s g = zipWith (\sChar gChar -> if m == sChar then m else gChar) 
 
 -- Q#06
 updateChances :: Move -> Secret -> Chances -> Chances
-updateChances m s c = if elem m s then c else c - 1
+updateChances m s c = if elem (toUpper m) s then c else c - 1
 -- *A6> updateChances 'a' "balbasar" 10
 -- 10
 -- *A6> updateChances 'x' "balbasar" 10
@@ -158,7 +158,7 @@ instance Show Game where
 instance Show GameException where
   show ge = case ge of
     InvalidMove -> "Invalid move. Must use an alphabetic character."
-    InvalidWord -> "Invalid word. A secret word must be between " ++ show (fst _LENGTH_) ++ " and " ++ show (snd _LENGTH_) ++ " alphabetic characters."
+    InvalidWord -> "Invalid word. A secret word must be in the dictionary and be between " ++ show (fst _LENGTH_) ++ " and " ++ show (snd _LENGTH_) ++ " alphabetic characters."
     RepeatMove -> "Repeated move. The character was previously used. Try another."
     GameOver -> "Game over, Man!"
     -- _ -> "unexpected exception"
@@ -221,9 +221,9 @@ isInDict d s = case validateSecret (\secret -> map toLower secret `elem` d) s  o
 
 -- Q#17
 validateNoDict :: Secret -> Either GameException Secret
-validateNoDict s = case hasValidChars s of
+validateNoDict s = case isValidLength  s of
     Left ex -> Left ex
-    Right _ -> case isValidLength s of
+    Right _ -> case hasValidChars s of
       Left ex -> Left ex
       Right _  -> Right s
 -- *A6> validateNoDict "asdf"
@@ -236,19 +236,52 @@ validateNoDict s = case hasValidChars s of
 -- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 
 validateWithDict :: Dictionary -> Secret -> Either GameException Secret
-validateWithDict d s = case isInDict d s of
+validateWithDict d s = case validateNoDict s of
   Left ex -> Left ex
-  Right _ -> case validateNoDict s of
+  Right _ -> case isInDict d s of
     Left ex -> Left ex
     Right _ -> Right s
--- *A6> dict =  ["asdf", "wert", "asdfasdfasdfasdfasdf", "a", "alpha1"]
+-- *A6> dict = ["asdf", "ASDF", "a", "PICACHU", "supercalifragilisticexpialidocious"]
+-- *A6> validateWithDict dict "supercalifragilisticexpialidocious"
+-- Left Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
+-- *A6> validateWithDict dict "a"
+-- Left Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
+-- *A6> validateWithDict dict "picachu"
+-- Left Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
 -- *A6> validateWithDict dict "asdf"
 -- Right "asdf"
--- *A6> validateWithDict dict "alpha"
--- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
--- *A6> validateWithDict dict "alpha1"
--- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 
 -- Q#18
 processTurn :: Move -> Game -> Either GameException Game
-processTurn = undefined
+processTurn m g  
+  | invalidMove m = Left InvalidMove
+  | repeatedMove (toUpper m) g = Left RepeatMove
+  | otherwise = if game_remainingChances newGame > 0
+        then Right newGame 
+        else Left GameOver
+    where 
+      newGame = updateGame m g
+  
+ -- *A6> myGame = Game "SPOT" "SPO_" "ABCSPO" 1
+-- *A6> myGame 
+-- **************************************************
+--        Current Guess:  S P O _
+--        Guessed:        A B C O P S
+--        Remaining Chances:      1
+-- **************************************************
+--
+-- *A6> processTurn 'D' myGame
+-- Left Game over, Man!
+-- *A6> processTurn 'T' myGame
+-- Right 
+-- **************************************************
+--        Current Guess:  S P O T
+--        Guessed:        A B C O P S T
+--        Remaining Chances:      1
+--
+-- **************************************************
+--
+-- *A6> processTurn '1' myGame
+-- Left Invalid move. Must use an alphabetic character.
+-- *A6> processTurn 'A' myGame
+-- Left Repeated move. The character was previously used. Try another.
