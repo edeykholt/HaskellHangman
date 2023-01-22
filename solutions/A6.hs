@@ -128,8 +128,6 @@ updateGame m g = Game (game_secretWord g) newGuess newUsedMoves newChances
 --    , _STARS_
 --    ]
 
-
-
 showGameHelper :: Game -> String
 showGameHelper game = unlines [
   _STARS_
@@ -143,7 +141,6 @@ showGameHelper game = unlines [
 
 instance Show Game where
   show game = showGameHelper game
-
 -- *A6> putStrLn $ show $ makeGame "balbasar"
 -- 
 -- **************************************************
@@ -188,13 +185,21 @@ validateSecret p s =
 -- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 
 -- Q#16
+hasValidChars :: Secret -> Either GameException Bool
+hasValidChars s = case validateSecret isAllAlpha s of
+    Right z -> Right True
+    Left err -> Left err
+    where isAllAlpha chars = foldl (\acc sChar -> acc && isAlpha sChar) True chars
+-- *A6> hasValidChars "333332"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
+-- *A6> hasValidChars "asdf"
+-- Right True
 
-hasValidChars = undefined
 
-
+isValidLength :: (Secret -> Bool) -> Secret -> GameException
 isValidLength = undefined
 
-
+isInDict :: (Secret -> Bool) -> Dictionary -> Secret -> GameException
 isInDict = undefined
 
 -- Q#17
