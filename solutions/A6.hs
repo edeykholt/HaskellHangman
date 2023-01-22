@@ -3,7 +3,8 @@ module A6 where
 import Provided
 
 import Data.List ( intersperse, sort )
-import Data.Char (isAlpha, isLetter, toUpper)
+import Data.Char (isAlpha, isLetter, toUpper, toLower)
+import Control.Monad.Except (ExceptT(ExceptT))
 -- import Text.Pandoc.Shared (capitalize)
 
 -- *** A6-0: WARM-UP *** --
@@ -160,7 +161,7 @@ instance Show GameException where
     InvalidWord -> "Invalid word. A secret word must be between " ++ show (fst _LENGTH_) ++ " and " ++ show (snd _LENGTH_) ++ " alphabetic characters."
     RepeatMove -> "Repeated move. The character was previously used. Try another."
     GameOver -> "Game over, Man!"
-    _ -> "unexpected exception"
+    -- _ -> "unexpected exception"
 
 -- *A6> show InvalidWord
 -- "Invalid word. A secret word must be between 3 and 20 alphabetic characters."
@@ -187,27 +188,67 @@ validateSecret p s =
 -- Q#16
 hasValidChars :: Secret -> Either GameException Bool
 hasValidChars s = case validateSecret isAllAlpha s of
-    Right z -> Right True
-    Left err -> Left err
-    where isAllAlpha chars = foldl (\acc sChar -> acc && isAlpha sChar) True chars
+    Right _ -> Right True
+    Left ex -> Left ex
+    where isAllAlpha chars = all isAlpha chars
 -- *A6> hasValidChars "333332"
 -- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 -- *A6> hasValidChars "asdf"
 -- Right True
 
+isValidLength :: Secret -> Either GameException Bool
+isValidLength s = case validateSecret lengthInRange s of
+  Right _ -> Right True
+  Left ex -> Left ex
+-- *A6> isValidLength "asdfasdfasdfasdfasdfasdf"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
+-- *A6> isValidLength "a"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
+-- *A6> isValidLength "aasdfasdf"
+-- Right True
 
-isValidLength :: (Secret -> Bool) -> Secret -> GameException
-isValidLength = undefined
-
-isInDict :: (Secret -> Bool) -> Dictionary -> Secret -> GameException
-isInDict = undefined
+isInDict :: Dictionary -> Secret -> Either GameException Bool
+isInDict d s = case validateSecret (\secret -> map toLower secret `elem` d) s  of 
+  Right _ -> Right True
+  Left ex -> Left ex
+-- *A6> dict =  ["asdf", "wert", "reew"]
+-- *A6> isInDict dict "asdf"
+-- Right True
+-- *A6> isInDict dict "asdfa"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
+-- *A6> isInDict dict "reew"
+-- Right True
 
 -- Q#17
+validateNoDict :: Secret -> Either GameException Secret
+validateNoDict s = case hasValidChars s of
+    Left ex -> Left ex
+    Right _ -> case isValidLength s of
+      Left ex -> Left ex
+      Right _  -> Right s
+-- *A6> validateNoDict "asdf"
+-- Right "asdf"
+-- *A6> validateNoDict "asdfasdfasdfasdfasdfasdfasdfasdf"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
+-- *A6> validateNoDict "asdfa222"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
+-- *A6> validateNoDict "222"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 
-validateNoDict = undefined
-
-validateWithDict = undefined
+validateWithDict :: Dictionary -> Secret -> Either GameException Secret
+validateWithDict d s = case isInDict d s of
+  Left ex -> Left ex
+  Right _ -> case validateNoDict s of
+    Left ex -> Left ex
+    Right _ -> Right s
+-- *A6> dict =  ["asdf", "wert", "asdfasdfasdfasdfasdf", "a", "alpha1"]
+-- *A6> validateWithDict dict "asdf"
+-- Right "asdf"
+-- *A6> validateWithDict dict "alpha"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
+-- *A6> validateWithDict dict "alpha1"
+-- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 
 -- Q#18
-
+processTurn :: Move -> Game -> Either GameException Game
 processTurn = undefined
