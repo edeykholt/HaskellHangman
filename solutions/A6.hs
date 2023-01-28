@@ -218,7 +218,8 @@ isInDict d = validateSecret (\secret -> map toLower secret `elem` d) InvalidWord
 
 -- Q#17
 validateNoDict :: Secret -> Either GameException Secret
-validateNoDict s = case isValidLength  s of
+validateNoDict s = 
+  case isValidLength  s of
     Left ex -> Left ex
     Right _ -> case hasValidChars s of
       Left ex -> Left ex
@@ -238,7 +239,7 @@ validateWithDict d s = case validateNoDict s of
   Right _ -> case isInDict d s of
     Left ex -> Left ex
     Right _ -> Right s
--- *A6> dict = ["asdf", "ASDF", "a", "PICACHU", "supercalifragilisticexpialidocious"]
+-- *A6> dict = ["asdf", "ASDF", "a", "picachu", "supercalifragilisticexpialidocious"]
 -- *A6> validateWithDict dict "supercalifragilisticexpialidocious"
 -- Left Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
 -- *A6> validateWithDict dict "a"
@@ -260,25 +261,18 @@ processTurn m g
       newGame = updateGame m g
   
  -- *A6> myGame = Game "SPOT" "SPO_" "ABCSPO" 1
--- *A6> myGame 
--- **************************************************
---        Current Guess:  S P O _
---        Guessed:        A B C O P S
---        Remaining Chances:      1
--- **************************************************
---
 -- *A6> processTurn 'D' myGame
 -- Left Game over, Man!
+-- *A6> processTurn '1' myGame
+-- Left Invalid move. Must use an alphabetic character.
 -- *A6> processTurn 'T' myGame
 -- Right 
 -- **************************************************
---        Current Guess:  S P O T
+--
+--         Current Guess:  S P O T
+--
 --        Guessed:        A B C O P S T
+--
 --        Remaining Chances:      1
 --
 -- **************************************************
---
--- *A6> processTurn '1' myGame
--- Left Invalid move. Must use an alphabetic character.
--- *A6> processTurn 'A' myGame
--- Left Repeated move. The character was previously used. Try another.
