@@ -177,40 +177,37 @@ toMaybe b aa = if b then Just aa else Nothing
 -- Nothing
 
 -- Q#15
-validateSecret :: (Secret -> Bool) -> Secret -> Either GameException Secret
-validateSecret p s = 
-  if p s then Right s else Left InvalidWord
--- *A6> validateSecret lengthInRange "balbasar"
+validateSecret :: (Secret -> Bool) -> GameException -> Secret-> Either GameException Secret
+validateSecret p ge s = 
+  if p s then Right s else Left ge
+-- *A6> validateSecret lengthInRange InvalidWord "balbasar"
 -- Right "balbasar"
--- *A6> validateSecret lengthInRange "a"
--- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
+-- *A6> validateSecret lengthInRange InvalidWord "a"
+-- Left Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
+-- *A6> 
 
 -- Q#16
-hasValidChars :: Secret -> Either GameException Bool
-hasValidChars s = case validateSecret isAllAlpha s of
-    Right _ -> Right True
-    Left ex -> Left ex
-    where isAllAlpha chars = all isAlpha chars
+-- might be better called withValidChars
+hasValidChars :: Secret -> Either GameException Secret
+hasValidChars = validateSecret (all isAlpha) InvalidWord 
 -- *A6> hasValidChars "333332"
 -- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 -- *A6> hasValidChars "asdf"
--- Right True
+-- Right "asdf"
 
-isValidLength :: Secret -> Either GameException Bool
-isValidLength s = case validateSecret lengthInRange s of
-  Right _ -> Right True
-  Left ex -> Left ex
+-- might be better called withValidLength or assertValidLength
+isValidLength :: Secret -> Either GameException Secret
+isValidLength = validateSecret lengthInRange InvalidWord 
 -- *A6> isValidLength "asdfasdfasdfasdfasdfasdf"
 -- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 -- *A6> isValidLength "a"
 -- Left Invalid word. A secret word must be between 3 and 20 alphabetic characters.
 -- *A6> isValidLength "aasdfasdf"
--- Right True
+-- Right "aasdfasdf"
 
-isInDict :: Dictionary -> Secret -> Either GameException Bool
-isInDict d s = case validateSecret (\secret -> map toLower secret `elem` d) s  of 
-  Right _ -> Right True
-  Left ex -> Left ex
+-- better called assertIsInDict
+isInDict :: Dictionary -> Secret -> Either GameException Secret
+isInDict d = validateSecret (\secret -> map toLower secret `elem` d) InvalidWord
 -- *A6> dict =  ["asdf", "wert", "reew"]
 -- *A6> isInDict dict "asdf"
 -- Right True
