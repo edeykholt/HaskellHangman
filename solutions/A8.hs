@@ -1,3 +1,4 @@
+{-# LANGUAGE TupleSections #-}
 module A8 where
 
 import Provided
@@ -6,6 +7,7 @@ import A7
 
 import Control.Monad
 import Control.Monad.State
+import Data.Char (toUpper)
 
 -- *** A8: Monads *** --
 
@@ -119,14 +121,48 @@ runApp = do
        
 
 -- Q#05
+makeGameS :: Secret -> State Game ()
+makeGameS s = 
+  put newState
+  where newState = Game (map toUpper s) (map (const '_') s ) "" _CHANCES_
+-- untested
 
-makeGameS = undefined
+updateGameS :: Move -> State Game ()
+updateGameS m = modify (updateGame m)
+-- untested
 
+updateGameS' :: Move -> State Game ()
+updateGameS' m = do
+  Game secretWord currentGuess usedMoves remainingChances <- get
+  let
+    mUpper       = toUpper m
+    newGuess     = revealLetters mUpper secretWord currentGuess 
+    newUsedMoves = if mUpper `elem` usedMoves then usedMoves else mUpper : usedMoves
+    newChances   = if isGoodGuess then remainingChances else remainingChances - 1 
+    isGoodGuess  = mUpper `elem` secretWord
+  put $ Game secretWord newGuess newUsedMoves newChances
+-- untested
 
-updateGameS = undefined
+repeatedMoveS :: Move -> State Game Bool
+repeatedMoveS m = 
+  do
+    usedMoves <- gets game_usedMoves
+    let isRepeatedMove = toUpper m `elem` usedMoves 
+    pure isRepeatedMove
+--untested 
 
-
-repeatedMoveS = undefined
-
-
-processTurnS = undefined
+processTurnS :: Move -> State Game (Either GameException ())
+processTurnS m  
+  | invalidMove m = pure $ Left InvalidMove
+  | otherwise     = do
+      isRepeatedMove <- repeatedMoveS m
+      if isRepeatedMove 
+        then do
+          pure $ Left RepeatMove
+        else do
+            Game _ _ _ remainingChances <- get
+            if remainingChances == 0
+              then pure $ Left GameOver
+              else pure $ Right ()
+-- untested     
+          
