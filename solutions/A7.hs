@@ -49,25 +49,12 @@ makeGameIfValid eges = case eges of
 
 -- Q#04
 getDict :: IO (Maybe Dictionary)
-getDict = gg
-    where
-        gg :: IO (Maybe Dictionary)
-        gg = toMaybe <$> x <*> z
-
-        x :: IO Bool
-        x = doesFileExist _DICT_FILE_
-
-        z :: IO Dictionary
-        z = lines <$> readFile _DICT_FILE_
-        -- TODO if _DICT_FILE is not found, return Just _DICT_
-
-getDict2 :: IO (Maybe Dictionary)
-getDict2 = toMaybe <$> doesFileExist _DICT_FILE_ <*> (lines <$> readFile _DICT_FILE_)
-        -- TODO if _DICT_FILE is not found, return Just _DICT_
-
--- getDict3 :: Maybe (IO Dictionary)
--- getDict3 = ggg
---    where
---        xs :: IO (Maybe Dictionary)
---        xs = toMaybe <$> doesFileExist _DICT_FILE_ <*>  (lines <$> readFile _DICT_FILE_)
---        ggg = undefined
+getDict = do
+    hasFile <- doesFileExist _DICT_FILE_
+    if hasFile
+    then
+        Just . lines <$> readFile _DICT_FILE_
+    else 
+        Just <$> _DICT_
+-- *A7> getDict
+-- Just ["aardvark","aardwolf","aaron","aback", ...
