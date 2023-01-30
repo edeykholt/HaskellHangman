@@ -29,16 +29,94 @@ validateWithDict d s = validateNoDict s >>= isInDict d
 
 -- Q#02
 playGame :: Game -> IO ()
-playGame = undefined
+playGame g = do
+    promptGuess
+    move <- getUpperChar
+    _SPACE_
+    case processTurn move g of 
+      Left GameOver     -> print GameOver
+      Left ex           -> print ex >> playGame g
+      Right updatedGame -> do
+        print updatedGame
+        if game_secretWord updatedGame == game_currentGuess updatedGame
+            then print "You've won!"
+            else playGame updatedGame
+-- *A8> gg = makeGame "picachu"
+-- *A8> :t gg
+-- gg :: Game
+-- *A8> playGame gg
+--Guess?  P
+--
+-- **************************************************
+--        Current Guess:  P _ _ _ _ _ _
+--        Guessed:        P
+--        Remaining Chances:      7
+-- **************************************************
+--
+-- Guess?  i
+--
+-- **************************************************
+--        Current Guess:  P I _ _ _ _ _
+--        Guessed:        I P
+--        Remaining Chances:      7
+--
+-- **************************************************
+-- Guess?  a
+-- **************************************************
+--     Current Guess:  P I _ A _ _ _
+--        Guessed:        A I P
+--        Remaining Chances:      7
+-- **************************************************
+--Guess?  a
+-- Repeated move. The character was previously used. Try another.
+
 
 -- Q#03
-
-startGame = undefined
+startGame :: (Secret -> Either GameException Secret) -> IO ()
+startGame f = do
+    secret <- setSecret
+    -- eges :: Either GameException Secret
+    let eges = f secret
+    case makeGameIfValid eges of
+      Left ge -> print ge >> startGame f
+      Right ga -> print ga >> playGame ga
+-- *A8> startGame validateNoDict
+-- Enter a secret word:
+-- Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
+-- Enter a secret word:
+--
+-- **************************************************
+--        Current Guess:  _ _ _ _ _ _ _
+--        Guessed:
+--        Remaining Chances:      7
+-- **************************************************
+-- Guess?  a
+-- **************************************************
+--        Current Guess:  _ _ _ A _ _ _
+--        Guessed:        A
+--        Remaining Chances:      7
+-- **************************************************
 
 -- Q#04
-
 runApp :: IO ()
-runApp = putStrLn "Welcome to Part II of EMURGO Academy's Haskell course!"
+runApp = do
+    maybeDict <- getDict
+    case maybeDict of
+      Nothing -> do
+        print "Missing dictionary file! Continue without dictionary? [Y/N]"
+        char <- getUpperChar
+        when (char == 'Y') (startGame validateNoDict)
+      Just dict -> do
+        let f = validateWithDict dict
+        startGame f 
+-- *A8> runApp
+-- Enter a secret word:
+-- **************************************************
+--        Current Guess:  _ _ _ _ _
+--        Guessed:
+--        Remaining Chances:      7
+-- **************************************************
+       
 
 -- Q#05
 
