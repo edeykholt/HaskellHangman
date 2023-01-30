@@ -10,14 +10,25 @@ import Control.Monad.State
 -- *** A8: Monads *** --
 
 -- Q#01
+validateNoDict :: Secret -> Either GameException Secret
+validateNoDict s = isValidLength s >>= hasValidChars
+-- *A8> validateNoDict "asdf"
+-- Right "asdf"
+-- *A8> validateNoDict "asdfasdfasdfasdfasdfasdfasdfasdf"
+-- Left Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
+-- *A8> validateNoDict "222222"
+-- Left Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
 
-validateNoDict = undefined
-
-
-validateWithDict = undefined
+validateWithDict :: Dictionary -> Secret -> Either GameException Secret
+validateWithDict d s = validateNoDict s >>= isInDict d
+-- *A8> dict = ["asdf", "ASDF", "a", "picachu", "supercalifragilisticexpialidocious"]
+-- *A8> validateWithDict dict "asdf"
+-- Right "asdf"
+-- *A8> validateWithDict dict "2"
+-- Left Invalid word. A secret word must be in the dictionary and be between 3 and 20 alphabetic characters.
 
 -- Q#02
-
+playGame :: Game -> IO ()
 playGame = undefined
 
 -- Q#03
