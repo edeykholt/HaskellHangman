@@ -125,11 +125,25 @@ makeGameS :: Secret -> State Game ()
 makeGameS s = 
   put newState
   where newState = Game (map toUpper s) (map (const '_') s ) "" _CHANCES_
--- untested
+
+makeGameS' :: Secret -> State Game ()
+makeGameS' secret = put $
+  Game { game_secretWord        = map toUpper secret
+       , game_currentGuess      = map (const '_') secret
+       , game_usedMoves         = []
+       , game_remainingChances  = _CHANCES_
+       }
 
 updateGameS :: Move -> State Game ()
 updateGameS m = modify (updateGame m)
--- untested
+-- *A8> runState (updateGameS 't') $ makeGame "test"
+-- ((),
+-- **************************************************
+--         Current Guess:  T _ _ T
+--         Guessed:        T
+--        Remaining Chances:      7
+-- **************************************************
+-- )
 
 updateGameS' :: Move -> State Game ()
 updateGameS' m = do
@@ -149,7 +163,14 @@ repeatedMoveS m =
     usedMoves <- gets game_usedMoves
     let isRepeatedMove = toUpper m `elem` usedMoves 
     pure isRepeatedMove
---untested 
+-- *A8> runState (updateGameS 't' >> repeatedMoveS 't') $ makeGame "test"
+-- (True,
+-- **************************************************
+--        Current Guess:  T _ _ T
+--        Guessed:        T
+--        Remaining Chances:      7
+-- **************************************************
+-- )
 
 processTurnS :: Move -> State Game (Either GameException ())
 processTurnS m  
@@ -164,5 +185,20 @@ processTurnS m
             if remainingChances == 0
               then pure $ Left GameOver
               else pure $ Right ()
--- untested     
+-- *A8> runState (updateGameS 't' >> processTurnS 't') $ makeGame "test"
+-- (Left Repeated move. The character was previously used. Try another.,
+-- **************************************************
+--         Current Guess:  T _ _ T
+--         Guessed:        T
+--         Remaining Chances:      7
+-- **************************************************
+-- )
+-- *A8> runState ( processTurnS '%') $ makeGame "test"
+-- (Left Invalid move. Must use an alphabetic character.,
+-- **************************************************
+--         Current Guess:  _ _ _ _
+--         Guessed:
+--         Remaining Chances:      7
+-- **************************************************
+-- )
           
