@@ -173,14 +173,14 @@ repeatedMoveS m =
 -- )
 
 processTurnS :: Move -> State Game (Either GameException ())
-processTurnS m  
-  | invalidMove m = pure $ Left InvalidMove
-  | otherwise     = do
+processTurnS m | invalidMove m = pure $ Left InvalidMove
+processTurnS m = do
       isRepeatedMove <- repeatedMoveS m
       if isRepeatedMove 
         then do
           pure $ Left RepeatMove
         else do
+            updateGameS m
             Game _ _ _ remainingChances <- get
             if remainingChances == 0
               then pure $ Left GameOver
@@ -201,4 +201,11 @@ processTurnS m
 --         Remaining Chances:      7
 -- **************************************************
 -- )
-          
+--   *A8> runState (processTurnS 'a' >> processTurnS 'b' >> processTurnS 'c' >> processTurnS 'd' >> processTurnS 'f' >> processTurnS 'g' >> processTurnS 'h' ) $ makeGame "test"
+-- (Left Game over, Man!,
+-- **************************************************
+--        Current Guess:  _ _ _ _
+--        Guessed:        A B C D F G H
+--        Remaining Chances:      0
+-- **************************************************
+-- )       
